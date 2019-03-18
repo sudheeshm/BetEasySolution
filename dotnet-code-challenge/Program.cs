@@ -10,10 +10,10 @@ namespace dotnet_code_challenge
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("BetEasy Solution!");
+            Console.WriteLine();
 
             List<Race> races = new List<Race>();
-
             new RaceService(races).GetAllRaces();
 
             races.ForEach(x => x.Print());

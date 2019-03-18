@@ -15,6 +15,12 @@ namespace dotnet_code_challenge.Models
             Name = name;
             Number = number;
         }
+        public Horse(string name, string number, decimal price)
+        {
+            Name = name;
+            Number = number;
+            Price = price;
+        }
 
         public void Print()
         {

@@ -1,15 +1,21 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Collections.Generic;
 using System.Configuration;
-using dotnet_code_challenge.Models;
 using System.Xml.Linq;
 using System.Linq;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using dotnet_code_challenge.Models;
+using dotnet_code_challenge.Helpers;
+
 
 namespace dotnet_code_challenge.DataService
 {
     public class RaceService
     {
+        private static readonly ILogger logger = new LoggerImpl();
         private List<Race> races;
 
         public RaceService(List<Race> raceList)
@@ -23,30 +29,27 @@ namespace dotnet_code_challenge.DataService
             if (string.IsNullOrEmpty(dataFolderPath))
                 Console.WriteLine("No data file path provided");
 
-            var xmlFiles = ReadFileName.ReadFileNames(dataFolderPath, "xml");
-            var jsonFiles = ReadFileName.ReadFileNames(dataFolderPath, "json");
-
-            if (xmlFiles != null)
-            {
-                xmlFiles.ForEach(s => {
-                    var fs = new FileStream(s, FileMode.Open, FileAccess.Read);
-                    processXMLFile(fs);
-                });
-            }
-
-            //if(jsonFiles != null)
-            //jsonFiles.ForEach(s => processXMLFile(s));
-
+            processDataFiles(ReadFileName.ReadFileNames(dataFolderPath, "xml"), "xml");
+            processDataFiles(ReadFileName.ReadFileNames(dataFolderPath, "json"), "json");
+    
             return races;
         }
 
-        private void processXMLFile1(Stream fileStream)
+        private void processDataFiles(List<string> fileNames, string type)
         {
-            if (fileStream == null)
-                return;
-
-            var xmlData = XElement.Load(fileStream);
-            xmlData.Descendants("races")?.ToList<XElement>().ForEach(x => addRaceDetail(x));
+            if (fileNames != null)
+            {
+                fileNames.ForEach(s =>
+                {
+                    using ( var fs = new FileStream(s, FileMode.Open, FileAccess.Read))
+                    {
+                        if (type == "xml")
+                            processXMLFile(fs);
+                        else if(type == "json")
+                            processJsonFile(fs);
+                    }
+                });
+            }
         }
 
         private void processXMLFile(Stream fileStream)
@@ -54,12 +57,52 @@ namespace dotnet_code_challenge.DataService
             if (fileStream == null)
                 return;
 
-            var xmlData = XElement.Load(fileStream);
-            xmlData.Descendants("races")?.ToList<XElement>().ForEach(x => addRaceDetail(x));
+            try
+            {
+                var xmlData = XElement.Load(fileStream);
+                xmlData.Descendants("races").ToList<XElement>().ForEach(x => addRaceDetail(x));
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex.Message);
+            }
 
             return;
         }
 
+        private void processJsonFile(Stream fileStream)
+        {
+            if (fileStream == null)
+                return;
+
+            string jsonData;
+            try
+            {
+                byte[] temp = new byte[fileStream.Length];
+                fileStream.Read(temp, 0, temp.Length);
+                jsonData = new UTF8Encoding(true).GetString(temp);
+
+                var jsonObj = JObject.Parse(jsonData);
+                var jsonFeed = JsonConvert.DeserializeObject<JsonFeed>(jsonData);
+                jsonFeed.RawData.Markets.ForEach(x => addRaceDetail(x, jsonFeed.RawData.FixtureName));
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex.Message);
+
+            }
+        }
+
+        private void addRaceDetail(Market raceData, string raceName)
+        {
+            if (raceData == null)
+                return;
+
+            var race = new Race();
+            race.SetName(raceName);
+            race.GetHorses().AddRange(raceData.GetHorses());
+            races.Add(race);
+        }
 
         private void addRaceDetail(XElement raceData)
         {
@@ -67,7 +110,6 @@ namespace dotnet_code_challenge.DataService
                 return;
 
             var name = raceData.Element("race").Attribute("name").Value;
-            //var horses = raceData.Element("race").Descendants("horses");
             var horses = raceData.Element("race").Element("horses").Descendants("horse");
             var prices = raceData.Element("race").Element("prices").Element("price").Element("horses").Descendants("horse");
 
