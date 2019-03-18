@@ -109,9 +109,10 @@ namespace dotnet_code_challenge.DataService
             if (raceData == null)
                 return;
 
-            var name = raceData.Element("race").Attribute("name").Value;
-            var horses = raceData.Element("race").Element("horses").Descendants("horse");
-            var prices = raceData.Element("race").Element("prices").Element("price").Element("horses").Descendants("horse");
+            var raceElement = raceData.Element("race");
+            var name = raceElement.Attribute("name").Value;
+            var horses = raceElement.Element("horses").Descendants("horse");
+            var prices = raceElement.Element("prices").Element("price").Element("horses").Descendants("horse");
 
             var horseList = horses.Select(x => getHorse(x)).ToList<Horse>();
 

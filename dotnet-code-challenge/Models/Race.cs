@@ -26,6 +26,8 @@ namespace dotnet_code_challenge.Models
             var SortedList = horses.OrderBy(o => o.Price).ToList();
             Console.WriteLine("Race Name: " + name);
             SortedList.ForEach(x => x.Print());
+
+            Console.WriteLine();
         }
     }
 }

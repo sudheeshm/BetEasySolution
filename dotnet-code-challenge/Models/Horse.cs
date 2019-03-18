@@ -24,7 +24,7 @@ namespace dotnet_code_challenge.Models
 
         public void Print()
         {
-            Console.WriteLine(Name + " " + Price.ToString());
+            Console.WriteLine("\t   " + Name + " " + Price.ToString());
         }
     }
 }
