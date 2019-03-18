@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Text;
 using System.Configuration;
 using dotnet_code_challenge.Models;
 using System.Xml.Linq;
@@ -41,27 +40,24 @@ namespace dotnet_code_challenge.DataService
             return races;
         }
 
-        private List<Horse> processXMLFile1(Stream fileStream)
+        private void processXMLFile1(Stream fileStream)
         {
             if (fileStream == null)
-                return null;
+                return;
 
             var xmlData = XElement.Load(fileStream);
             xmlData.Descendants("races")?.ToList<XElement>().ForEach(x => addRaceDetail(x));
-
-            return null;
-
         }
 
-        private List<Horse> processXMLFile(Stream fileStream)
+        private void processXMLFile(Stream fileStream)
         {
             if (fileStream == null)
-                return null;
+                return;
 
             var xmlData = XElement.Load(fileStream);
             xmlData.Descendants("races")?.ToList<XElement>().ForEach(x => addRaceDetail(x));
 
-            return null;
+            return;
         }
 
 
